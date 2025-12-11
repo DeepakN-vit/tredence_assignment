@@ -1,124 +1,141 @@
-Minimal Workflow Engine (FastAPI)
+ 
+---
 
-This project implements a small workflow/agent engine inspired by the idea of node-based execution graphs. It is built as part of an AI Engineering internship assignment to demonstrate backend engineering fundamentals, API design, state management, and clean Python structure.
+# Minimal Workflow Engine (FastAPI)
 
-The engine allows you to define nodes, connect them with edges, maintain a shared state, and execute the workflow step-by-step. It includes basic branching, looping with conditions, logging, and tool/function execution.
+This project implements a lightweight workflow engine that executes a sequence of connected nodes using shared state. It is designed for evaluating backend fundamentals such as API design, state handling, modular Python architecture, and workflow execution. The system supports node functions, branching, looping with conditions, logging, and extensibility through a tool registry.
 
-Project Structure
+---
+
+## Project Structure
+
+```
 app/
 │
-├── main.py                 # FastAPI entrypoint and routes
+├── main.py
 │
 ├── core/
-│   ├── graph_engine.py     # Workflow engine: execution, loops, branching, logs
-│   ├── models.py           # Pydantic models for graph & runs
-│   └── registry.py         # Tool registry
+│   ├── graph_engine.py
+│   ├── models.py
+│   └── registry.py
 │
 ├── workflows/
-│   └── code_review.py      # Sample workflow (Code Review Agent)
+│   └── code_review.py
 │
 └── storage/
-    └── memory.py           # In-memory storage for graphs and runs
+    └── memory.py
+```
 
+This structure separates routing, engine logic, workflows, storage, and shared utilities for clarity and maintainability.
 
-This layout keeps each concern separated and ensures the engine logic is easy to understand and modify.
+---
 
-How to Run the Project
-1. Install dependencies
+## How to Run the Project
+
+### 1. Install dependencies
+
+```
 pip install fastapi uvicorn
+```
 
-2. Start the FastAPI server
+### 2. Start the FastAPI server
 
-Run from the project root:
+From the project root:
 
+```
 uvicorn app.main:app --reload
+```
 
+Server runs at:
 
-The server will start at:
-
+```
 http://127.0.0.1:8000
+```
 
-3. Use the interactive API documentation
+### 3. Use the interactive documentation
 
 Open:
 
+```
 http://127.0.0.1:8000/docs
+```
 
+You can create graphs, run workflows, and inspect results through the Swagger interface.
 
-You can create graphs, run workflows, and inspect results directly from the Swagger UI.
+---
 
-What This Workflow Engine Supports
-✔ Node-Based Execution
+## Features Supported by the Workflow Engine
 
-Each node is a Python function that reads and updates a shared state dictionary.
+### Node-Based Execution
 
-✔ Shared State
+Nodes are simple Python functions that read from and modify a shared state dictionary.
 
-State flows from one node to the next and gets updated along the way.
+### Shared State
 
-✔ Directed Edges
+The state flows through each node and accumulates outputs as execution progresses.
 
-Edges determine the path of execution. Example:
+### Directed Edges
 
+Edges describe the execution order among nodes.
+
+Example:
+
+```
 "edges": { "extract": ["complexity"] }
+```
 
-✔ Branching
+### Branching
 
-Next node is chosen based on graph edges. Can be extended to condition-based routing.
+Next nodes are selected based on graph edges. The design supports future extension for conditional branching.
 
-✔ Looping (with stopping condition)
+### Looping with Stop Conditions
 
-The engine supports looping through nodes until a condition in the shared state is met.
-In the Code Review agent, looping stops when:
+Node execution can repeat in a loop until a condition in the state is satisfied.
+In the Code Review workflow, execution stops when:
 
+```
 quality_score >= threshold
+```
 
-✔ Tool Registry
+### Tool Registry
 
-You can register utility functions that nodes can call during execution.
+A simple registry enables defining reusable helper functions that can be invoked within nodes.
 
-✔ Execution Logs
+### Execution Logs
 
-Every node execution logs:
+The engine records start and end times of each node along with state snapshots and messages.
 
-start time
+### FastAPI Endpoints
 
-end time
+* POST `/graph/create`
+* POST `/graph/run`
+* GET `/graph/state/{run_id}`
 
-state snapshot
+### In-Memory Storage
 
-messages
+Graphs and runs are stored in lightweight in-memory structures suitable for this assignment.
 
-✔ FastAPI Endpoints
+---
 
-POST /graph/create → register a new workflow
+## Example Workflow: Code Review Agent
 
-POST /graph/run → execute a workflow
+This sample workflow performs the following:
 
-GET /graph/state/{run_id} → view final state + logs
+1. Extract functions
+2. Compute basic complexity
+3. Detect issues
+4. Suggest improvements
+5. Loop until the quality score meets the threshold
 
-✔ In-Memory Storage
+All operations are simple rule-based checks.
 
-Graphs and runs are stored in lightweight dictionaries (simple and effective for this assignment).
+---
 
-Example Workflow Included (Code Review Agent)
+## How to Create and Run a Workflow
 
-The sample agent performs:
+### 1. Create a graph
 
-Extract functions
-
-Measure code complexity
-
-Detect basic issues
-
-Suggest improvements
-
-Loop until the quality score reaches the threshold
-
-All steps are rule-based and require no ML.
-
-How to Create and Run a Workflow
-1. Create a Graph (example)
+```
 {
   "nodes": [
     {"name": "extract", "func": "extract_functions"},
@@ -134,8 +151,11 @@ How to Create and Run a Workflow
   },
   "start_node": "extract"
 }
+```
 
-2. Run the Graph
+### 2. Run the graph
+
+```
 {
   "graph_id": "YOUR_GRAPH_ID",
   "initial_state": {
@@ -143,47 +163,69 @@ How to Create and Run a Workflow
     "threshold": 7
   }
 }
+```
 
-3. View Results
+### 3. View results
 
-Use:
-
+```
 GET /graph/state/{run_id}
+```
 
+The endpoint returns final state updates and a detailed execution log.
 
-You will receive the final state and a complete execution log.
+---
 
-What I Would Improve With More Time
+## Possible Improvements With More Time
 
-Async Execution:
-Run workflows in the background and return run_id immediately.
+* Asynchronous execution to allow background workflow processing
+* WebSocket-based streaming of execution logs
+* Conditional branching rules inside the graph engine
+* Visual representation of the workflow graph
+* Database-backed storage for graphs and executions
+* Additional predefined workflows such as summarization or data quality checking
 
-WebSocket Log Streaming:
-Send live execution updates to the client.
+---
 
-Conditional Branching:
-Allow nodes to choose next steps based on state values.
+## Result Screenshots
 
-Graph Visualization:
-Render the node graph visually for easier debugging.
+<p align="center">
+  <img width="918" height="497" src="https://github.com/user-attachments/assets/f81f0dc6-5b77-4e82-ac50-66dd1a4e0591" />
+</p>
 
-Persistent Storage:
-Store graphs and run histories in a database instead of in memory.
+<p align="center">
+  <img width="909" height="498" src="https://github.com/user-attachments/assets/3acf1191-3d14-44be-9083-237fefdb19fa" />
+</p>
 
-Additional Built-In Workflows:
-Add summarization pipelines or data-quality agents.
+<p align="center">
+  <img width="957" height="501" src="https://github.com/user-attachments/assets/fd93e244-48ef-4513-b564-7baffc6a108d" />
+</p>
 
-Final Notes
+<p align="center">
+  <img width="1134" height="495" src="https://github.com/user-attachments/assets/9f2850e6-b5ab-4272-b15a-5a0cefccf0ce" />
+</p>
 
-This project focuses on clean structure and correctness.
-The goal is not feature overload but demonstrating:
+<p align="center">
+  <img width="884" height="365" src="https://github.com/user-attachments/assets/43bc360c-eb28-493b-b5fb-5460bdb2650f" />
+</p>
 
-clear API design
+<p align="center">
+  <img width="1077" height="407" src="https://github.com/user-attachments/assets/e7ca2258-5670-462a-aa9d-246008b9ba76" />
+</p>
 
-clean Python architecture
+---
 
-state-driven execution
+## Final Notes
 
-ability to reason in terms of nodes, transitions, and loops
+This project focuses on clarity of design and correctness of execution.
+The implementation demonstrates:
 
-This implementation fulfills all core requirements of the assignment.
+* Clean API structure
+* Well-separated Python modules
+* State-driven workflow execution
+* Ability to describe processes using nodes, transitions, and loops
+
+This implementation satisfies all core requirements of the assignment.
+
+---
+
+ 
